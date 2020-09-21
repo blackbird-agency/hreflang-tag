@@ -238,12 +238,12 @@ class Alternate
         $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
         $url         = $productsUrl[$_product->getId()];
 
-        if($this->getRemoveStoreTag()) {
+        if ($this->getRemoveStoreTag()) {
             $this->emulation->startEnvironmentEmulation($store->getId());
-        }
-        $url = $store->getUrl('/') . $url['url_rewrite'];
-        if($this->getRemoveStoreTag()) {
+            $url = $store->getUrl('/') . $url['url_rewrite'];
             $this->emulation->stopEnvironmentEmulation($store->getId());
+        } else {
+            $url = $store->getUrl($url['url_rewrite']);
         }
 
         return $url;
@@ -268,12 +268,12 @@ class Alternate
         $urlRewrite = $urlRewriteCollection->getFirstItem();
 
         if ($urlRewrite && $urlRewrite->getRequestPath()) {
-            if($this->getRemoveStoreTag()) {
+            if ($this->getRemoveStoreTag()) {
                 $this->emulation->startEnvironmentEmulation($store->getId());
-            }
-            $url = $store->getUrl('/') . $urlRewrite['request_path'];
-            if($this->getRemoveStoreTag()) {
+                $url = $store->getUrl('/') . $urlRewrite['request_path'];
                 $this->emulation->stopEnvironmentEmulation($store->getId());
+            } else {
+                $url = $store->getUrl($urlRewrite['request_path']);
             }
         }
 
