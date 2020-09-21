@@ -1,0 +1,24 @@
+{
+    "name": "blackbird/hreflang",
+    "description": "",
+    "authors": [
+        "Blackbird Agency",
+        "Anthony Grutter"
+    ],
+    "require": {
+        "magento/module-deploy": ">=100.0.0"
+    },
+    "type": "magento2-module",
+    "version": "100.0.0",
+    "license": [
+        "https://store.bird.eu/license/"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Blackbird\\HrefLang\\": ""
+        }
+    }
+}
