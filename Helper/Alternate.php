@@ -11,6 +11,7 @@ use Magento\Framework\Locale\Deployed\Options;
 use Magento\Framework\Locale\Resolver;
 use Magento\Framework\Registry;
 use Magento\Framework\View\LayoutInterface;
+use Magento\Store\Model\App\Emulation;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\UrlRewrite\Model\ResourceModel\UrlRewriteCollectionFactory;
 
@@ -77,6 +78,11 @@ class Alternate
     protected $urlRewriteCollectionFactory;
 
     /**
+     * @var Emulation
+     */
+    protected $emulation;
+
+    /**
      * Alternate constructor.
      *
      * @param StoreManagerInterface       $storeManager
@@ -90,6 +96,7 @@ class Alternate
      * @param Registry                    $registry
      * @param Url                         $catalogUrl
      * @param UrlRewriteCollectionFactory $urlRewriteCollectionFactory
+     * @param Emulation                   $emulation
      */
     public function __construct(
         StoreManagerInterface $storeManager,
@@ -102,7 +109,8 @@ class Alternate
         LayoutInterface $layout,
         Registry $registry,
         Url $catalogUrl,
-        UrlRewriteCollectionFactory $urlRewriteCollectionFactory
+        UrlRewriteCollectionFactory $urlRewriteCollectionFactory,
+        Emulation $emulation
     ) {
         $this->storeManager                = $storeManager;
         $this->localeResolver              = $localeResolver;
@@ -115,6 +123,7 @@ class Alternate
         $this->registry                    = $registry;
         $this->catalogUrl                  = $catalogUrl;
         $this->urlRewriteCollectionFactory = $urlRewriteCollectionFactory;
+        $this->emulation                   = $emulation;
     }
 
     /**
@@ -130,7 +139,10 @@ class Alternate
             $currentStore    = $this->storeManager->getStore();
 
             foreach ($this->storeManager->getStores() as $store) {
-                if (!$this->scopeConfig->getValue('same_website_only', 'store') || $store->getWebsiteId() === $currentStore->getWebsiteId()) {
+                if (!$this->scopeConfig->getValue(
+                        'same_website_only',
+                        'store'
+                    ) || $store->getWebsiteId() === $currentStore->getWebsiteId()) {
                     $localeForStore = $this->scopeConfig->getValue('general/locale/code', 'store', $store->getId());
                     $otherCodes[]   = $localeForStore;
 
@@ -140,11 +152,6 @@ class Alternate
                     } //we are on category page
                     elseif ($_category = $this->getCurrentCategory()) {
                         $storeCodeToUrl[$localeForStore] = $this->getCategoryUrl($_category, $store);
-                    } //we are on home page
-                    elseif ($this->registry->registry('current_content') && $this->registry->registry(
-                            'current_content')->getContentType()->getIdentifier() === 'homepage') {
-                        $storeCodeToUrl[$localeForStore] = $this->scopeConfig->getValue(
-                            'web/secure/base_url', 'store', $store->getId());
                     }
                 }
             }
@@ -175,7 +182,10 @@ class Alternate
                     'currentLang'     => $currentLang,
                     'storeCodeToUrl'  => $storeCodeToUrl,
                     'currentStoreUrl' => $storeCodeToUrl[$this->scopeConfig->getValue(
-                        'general/locale/code', 'store', $currentStore->getId())]
+                        'general/locale/code',
+                        'store',
+                        $currentStore->getId()
+                    )]
                 ];
             }
         }
@@ -227,8 +237,10 @@ class Alternate
     {
         $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
         $url         = $productsUrl[$_product->getId()];
-        $url         = $this->scopeConfig->getValue(
-                'web/secure/base_url', 'store', $store->getId()) . $url['url_rewrite'];
+
+        $this->emulation->startEnvironmentEmulation($store->getId());
+        $url = $store->getUrl('/') . $url['url_rewrite'];
+        $this->emulation->stopEnvironmentEmulation($store->getId());
 
         return $url;
     }
@@ -252,8 +264,9 @@ class Alternate
         $urlRewrite = $urlRewriteCollection->getFirstItem();
 
         if ($urlRewrite && $urlRewrite->getRequestPath()) {
-            $url = $urlRewrite['request_path'];
-            $url = $this->scopeConfig->getValue('web/secure/base_url', 'store', $store->getId()) . $url;
+            $this->emulation->startEnvironmentEmulation($store->getId());
+            $url = $store->getUrl('/') . $urlRewrite['request_path'];
+            $this->emulation->stopEnvironmentEmulation($store->getId());
         }
 
         return $url;

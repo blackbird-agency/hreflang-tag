@@ -23,11 +23,16 @@
                 <field id="replace_langswitcher" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Replace Native Store Switcher Url</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment><![CDATA[Only applied for products, categories and content from Blackbird Content Manager extension.]]></comment>
+                    <comment><![CDATA[Only applied for products and categories]]></comment>
+                </field>
+                <field id="remove_store_param" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Remove "___store" Parameter from Url</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[You can remove ___store parameter from store switcher and href lang if not necessary for your configuration.]]></comment>
                 </field>
                 <field id="default_locale" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Default Locale</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <source_model>Magento\Config\Model\Config\Source\Locale</source_model>
                     <comment><![CDATA[Format: "en_US". Define which store view will have a tag "x-default" attached. See documentation here: https://support.google.com/webmasters/answer/189077?hl=fr]]></comment>
                 </field>
             </group>

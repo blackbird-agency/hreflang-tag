@@ -22,12 +22,12 @@ class HrefLang extends AbstractBlock
      * LinkAlternate constructor.
      *
      * @param Alternate        $alternateHelper
-     * @param Template\Context $context
+     * @param \Magento\Framework\View\Element\Context $context
      * @param array            $data
      */
     public function __construct(
         Alternate $alternateHelper,
-        Template\Context $context,
+        \Magento\Framework\View\Element\Context $context,
         array $data = []
     ) {
         $this->alternateHelper = $alternateHelper;

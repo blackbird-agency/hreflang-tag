@@ -7,6 +7,7 @@
                 <same_website_only>1</same_website_only>
                 <replace_langswitcher>0</replace_langswitcher>
                 <default_locale>en_US</default_locale>
+                <remove_store_param>0</remove_store_param>
             </general>
         </hreflang>
     </default>
