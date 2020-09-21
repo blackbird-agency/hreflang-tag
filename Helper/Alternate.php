@@ -238,9 +238,13 @@ class Alternate
         $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
         $url         = $productsUrl[$_product->getId()];
 
-        $this->emulation->startEnvironmentEmulation($store->getId());
+        if($this->getRemoveStoreTag()) {
+            $this->emulation->startEnvironmentEmulation($store->getId());
+        }
         $url = $store->getUrl('/') . $url['url_rewrite'];
-        $this->emulation->stopEnvironmentEmulation($store->getId());
+        if($this->getRemoveStoreTag()) {
+            $this->emulation->stopEnvironmentEmulation($store->getId());
+        }
 
         return $url;
     }
@@ -264,9 +268,13 @@ class Alternate
         $urlRewrite = $urlRewriteCollection->getFirstItem();
 
         if ($urlRewrite && $urlRewrite->getRequestPath()) {
-            $this->emulation->startEnvironmentEmulation($store->getId());
+            if($this->getRemoveStoreTag()) {
+                $this->emulation->startEnvironmentEmulation($store->getId());
+            }
             $url = $store->getUrl('/') . $urlRewrite['request_path'];
-            $this->emulation->stopEnvironmentEmulation($store->getId());
+            if($this->getRemoveStoreTag()) {
+                $this->emulation->stopEnvironmentEmulation($store->getId());
+            }
         }
 
         return $url;
@@ -279,5 +287,14 @@ class Alternate
     public function getXDefault(): string
     {
         return $this->scopeConfig->getValue('hreflang/general/default_locale', 'store');
+    }
+
+    /**
+     * Return x-default locale code
+     * @return mixed
+     */
+    protected function getRemoveStoreTag(): string
+    {
+        return $this->scopeConfig->getValue('hreflang/general/remove_store_param', 'store');
     }
 }
