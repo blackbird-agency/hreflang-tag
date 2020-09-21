@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="blackbird" translate="label" sortOrder="10">
+            <label>Blackbird</label>
+        </tab>
+        <section id="hreflang" translate="label" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Href Lang</label>
+            <tab>blackbird</tab>
+            <resource>Blackbird_HrefLang::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Country Selector Block</label>
+                <field id="enabled_hreflang" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Href Lang Block</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Add all alternate links in the DOM]]></comment>
+                </field>
+                <field id="same_website_only" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Show Only Store From Same Website</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="replace_langswitcher" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Replace Native Store Switcher Url</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Only applied for products, categories and content from Blackbird Content Manager extension.]]></comment>
+                </field>
+                <field id="default_locale" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default Locale</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Format: "en_US". Define which store view will have a tag "x-default" attached. See documentation here: https://support.google.com/webmasters/answer/189077?hl=fr]]></comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

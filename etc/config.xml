@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <hreflang>
+            <general>
+                <enabled_hreflang>1</enabled_hreflang>
+                <same_website_only>1</same_website_only>
+                <replace_langswitcher>0</replace_langswitcher>
+                <default_locale>en_US</default_locale>
+            </general>
+        </hreflang>
+    </default>
+</config>

@@ -7,16 +7,11 @@ use Magento\Framework\View\Element\AbstractBlock;
 
 class HrefLang extends AbstractBlock
 {
-    /**
-     * Default href lang locale
-     */
-    const DEFAULT_LOCALE = 'fr_FR';
 
     /**
      * Default href lang code
      */
     const DEFAULT_HREF_LANG = 'x-default';
-
 
     /**
      * @var Alternate
@@ -39,7 +34,9 @@ class HrefLang extends AbstractBlock
         parent::__construct($context, $data);
     }
 
-
+    /**
+     * @return array
+     */
     protected function getHrefLangWithCode()
     {
         $res       = [];
@@ -48,7 +45,7 @@ class HrefLang extends AbstractBlock
             foreach ($alternate['storeCodeToUrl'] as $keyLocate => $url) {
                 $altKey = strtolower(substr($keyLocate, 0, 2)); //iso2
 
-                if ($keyLocate == self::DEFAULT_LOCALE) {
+                if ($keyLocate === $this->alternateHelper->getXDefault()) {
                     $res[self::DEFAULT_HREF_LANG] = $url;
                 }
 
@@ -59,6 +56,9 @@ class HrefLang extends AbstractBlock
         return $res;
     }
 
+    /**
+     * @return string
+     */
     public function toHtml()
     {
         $res = '';

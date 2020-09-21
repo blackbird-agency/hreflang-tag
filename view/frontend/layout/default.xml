@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="head.additional">
+            <block class="Blackbird\HrefLang\Block\HrefLang" name="hreflang" ifconfig="hreflang/block/enabled_hreflang" />
+        </referenceBlock>
+        <!--<referenceBlock name="navigation.sections">
+            <block class="Blackbird\HrefLang\Block\CountrySelector" name="hreflang.countryselector" ifconfig="hreflang/block/enabled_header_wrapper" />
+        </referenceBlock>-->
+    </body>
+</page>

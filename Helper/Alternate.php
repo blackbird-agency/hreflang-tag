@@ -130,7 +130,7 @@ class Alternate
             $currentStore    = $this->storeManager->getStore();
 
             foreach ($this->storeManager->getStores() as $store) {
-                if ($store->getWebsiteId() === $currentStore->getWebsiteId()) {
+                if (!$this->scopeConfig->getValue('same_website_only', 'store') || $store->getWebsiteId() === $currentStore->getWebsiteId()) {
                     $localeForStore = $this->scopeConfig->getValue('general/locale/code', 'store', $store->getId());
                     $otherCodes[]   = $localeForStore;
 
@@ -257,5 +257,14 @@ class Alternate
         }
 
         return $url;
+    }
+
+    /**
+     * Return x-default locale code
+     * @return mixed
+     */
+    public function getXDefault(): string
+    {
+        return $this->scopeConfig->getValue('hreflang/general/default_locale', 'store');
     }
 }
