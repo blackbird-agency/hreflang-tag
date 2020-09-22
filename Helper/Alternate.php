@@ -5,11 +5,10 @@ namespace Blackbird\HrefLang\Helper;
 use Magento\Catalog\Api\CategoryRepositoryInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Url;
-use Magento\Catalog\Model\Session;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Locale\Deployed\Options;
 use Magento\Framework\Locale\Resolver;
-use Magento\Framework\Registry;
 use Magento\Framework\View\LayoutInterface;
 use Magento\Store\Model\App\Emulation;
 use Magento\Store\Model\StoreManagerInterface;
@@ -43,11 +42,6 @@ class Alternate
     protected $scopeConfig;
 
     /**
-     * @var Session
-     */
-    protected $catalogSession;
-
-    /**
      * @var CategoryRepositoryInterface
      */
     protected $categoryRepository;
@@ -61,11 +55,6 @@ class Alternate
      * @var LayoutInterface
      */
     protected $layout;
-
-    /**
-     * @var Registry
-     */
-    protected $registry;
 
     /**
      * @var Url
@@ -83,47 +72,49 @@ class Alternate
     protected $emulation;
 
     /**
+     * @var RequestInterface
+     */
+    protected $request;
+
+    /**
      * Alternate constructor.
      *
      * @param StoreManagerInterface       $storeManager
      * @param Resolver                    $localeResolver
      * @param Options                     $localeOptions
      * @param ScopeConfigInterface        $scopeConfig
-     * @param Session                     $catalogSession
      * @param CategoryRepositoryInterface $categoryRepository
      * @param ProductRepositoryInterface  $productRepository
      * @param LayoutInterface             $layout
-     * @param Registry                    $registry
      * @param Url                         $catalogUrl
      * @param UrlRewriteCollectionFactory $urlRewriteCollectionFactory
      * @param Emulation                   $emulation
+     * @param RequestInterface            $request
      */
     public function __construct(
         StoreManagerInterface $storeManager,
         Resolver $localeResolver,
         Options $localeOptions,
         ScopeConfigInterface $scopeConfig,
-        Session $catalogSession,
         CategoryRepositoryInterface $categoryRepository,
         ProductRepositoryInterface $productRepository,
         LayoutInterface $layout,
-        Registry $registry,
         Url $catalogUrl,
         UrlRewriteCollectionFactory $urlRewriteCollectionFactory,
-        Emulation $emulation
+        Emulation $emulation,
+        RequestInterface $request
     ) {
         $this->storeManager                = $storeManager;
         $this->localeResolver              = $localeResolver;
         $this->localeOptions               = $localeOptions;
         $this->scopeConfig                 = $scopeConfig;
-        $this->catalogSession              = $catalogSession;
         $this->categoryRepository          = $categoryRepository;
         $this->productRepository           = $productRepository;
         $this->layout                      = $layout;
-        $this->registry                    = $registry;
         $this->catalogUrl                  = $catalogUrl;
         $this->urlRewriteCollectionFactory = $urlRewriteCollectionFactory;
         $this->emulation                   = $emulation;
+        $this->request                     = $request;
     }
 
     /**
@@ -200,7 +191,7 @@ class Alternate
     protected function getCurrentCategory()
     {
         $category   = null;
-        $categoryId = $this->catalogSession->getLastViewedCategoryId();
+        $categoryId = $this->request->getParam('id');
 
         //check if we are on product page
         if ($categoryId && in_array('catalog_category_view', $this->layout->getUpdate()->getHandles())) {
@@ -217,7 +208,7 @@ class Alternate
     protected function getCurrentProduct()
     {
         $product   = null;
-        $productId = $this->catalogSession->getLastViewedProductId();
+        $productId = $this->request->getParam('id');
 
         //check if we are on product page
         if ($productId && in_array('catalog_product_view', $this->layout->getUpdate()->getHandles())) {
