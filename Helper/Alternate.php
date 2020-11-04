@@ -14,7 +14,7 @@ use Magento\Store\Model\App\Emulation;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\UrlRewrite\Model\ResourceModel\UrlRewriteCollectionFactory;
 
-class Alternate
+class Alternate extends Magento\Framework\App\Helper\AbstractHelper
 {
     /**
      * @var null
