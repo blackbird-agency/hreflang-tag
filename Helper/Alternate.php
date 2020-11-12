@@ -130,10 +130,10 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
             $currentStore    = $this->storeManager->getStore();
 
             foreach ($this->storeManager->getStores() as $store) {
-                if (!$this->scopeConfig->getValue(
+                if ((!$this->scopeConfig->getValue(
                         'same_website_only',
                         'store'
-                    ) || $store->getWebsiteId() === $currentStore->getWebsiteId()) {
+                    ) || $store->getWebsiteId() === $currentStore->getWebsiteId()) && $store->getRootCategoryId() === $currentStore->getRootCategoryId()) {
                     $localeForStore = $this->scopeConfig->getValue('general/locale/code', 'store', $store->getId());
                     $otherCodes[]   = $localeForStore;
 
