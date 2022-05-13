@@ -8,6 +8,7 @@
                 <replace_langswitcher>0</replace_langswitcher>
                 <default_locale>en_US</default_locale>
                 <remove_store_param>0</remove_store_param>
+                <enabled_store>1</enabled_store>
             </general>
         </hreflang>
     </default>

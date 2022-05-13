@@ -7,6 +7,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Url;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\Deployed\Options;
 use Magento\Framework\Locale\Resolver;
 use Magento\Framework\View\LayoutInterface;
@@ -135,14 +136,21 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                         'store'
                     ) || $store->getWebsiteId() === $currentStore->getWebsiteId()) && $store->getRootCategoryId() === $currentStore->getRootCategoryId()) {
                     $localeForStore = $this->scopeConfig->getValue('general/locale/code', 'store', $store->getId());
-                    $otherCodes[]   = $localeForStore;
 
-                    // we are on product page
-                    if ($_product = $this->getCurrentProduct()) {
-                        $storeCodeToUrl[$localeForStore] = $this->getProductUrl($_product, $store);
-                    } //we are on category page
-                    elseif ($_category = $this->getCurrentCategory()) {
-                        $storeCodeToUrl[$localeForStore] = $this->getCategoryUrl($_category, $store);
+                    if ($this->scopeConfig->getValue('hreflang/general/enabled_store', 'store', $store->getId())) {
+                        $otherCodes[] = $localeForStore;
+
+                        // we are on product page
+                        if ($_product = $this->getCurrentProduct()) {
+                            $storeCodeToUrl[$localeForStore] = $this->getProductUrl($_product, $store);
+                        } //we are on category page
+                        elseif ($_category = $this->getCurrentCategory()) {
+                            $storeCodeToUrl[$localeForStore] = $this->getCategoryUrl($_category, $store);
+                        } //we are on home page
+                        elseif ($this->request->getFullActionName() == 'cms_index_index') {
+                            $storeCodeToUrl[$localeForStore] = $this->scopeConfig->getValue(
+                                'web/secure/base_url', 'store', $store->getId());
+                        }
                     }
                 }
             }
@@ -162,7 +170,6 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                     }
                     $language = $language[0];
 
-                    //todo : find a better way to get language name in corresponding locale
                     $otherLangs[] = ['label' => $language, 'code' => $lang['value']];
                 }
             }
@@ -173,10 +180,7 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                     'currentLang'     => $currentLang,
                     'storeCodeToUrl'  => $storeCodeToUrl,
                     'currentStoreUrl' => $storeCodeToUrl[$this->scopeConfig->getValue(
-                        'general/locale/code',
-                        'store',
-                        $currentStore->getId()
-                    )]
+                        'general/locale/code', 'store', $currentStore->getId())]
                 ];
             }
         }
@@ -195,7 +199,11 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
 
         //check if we are on product page
         if ($categoryId && in_array('catalog_category_view', $this->layout->getUpdate()->getHandles())) {
-            $category = $this->categoryRepository->get($categoryId);
+            try {
+                $category = $this->categoryRepository->get($categoryId);
+            } catch (NoSuchEntityException $e) {
+                //silence is golden
+            }
         }
 
         return $category;
@@ -212,7 +220,11 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
 
         //check if we are on product page
         if ($productId && in_array('catalog_product_view', $this->layout->getUpdate()->getHandles())) {
-            $product = $this->productRepository->getById($productId);
+            try {
+                $product = $this->productRepository->getById($productId);
+            } catch (NoSuchEntityException $e) {
+                //silence is golden
+            }
         }
 
         return $product;
@@ -227,14 +239,15 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
     protected function getProductUrl(\Magento\Catalog\Api\Data\ProductInterface $_product, $store)
     {
         $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
-        $url         = $productsUrl[$_product->getId()];
-
-        if ($this->getRemoveStoreTag()) {
-            $this->emulation->startEnvironmentEmulation($store->getId());
-            $url = $store->getUrl('/') . $url['url_rewrite'];
-            $this->emulation->stopEnvironmentEmulation($store->getId());
-        } else {
-            $url = $store->getUrl($url['url_rewrite']);
+        $url         = !empty($productsUrl[$_product->getId()]) ? $productsUrl[$_product->getId()] : '';
+        if (!empty($url)) {
+            if ($this->getRemoveStoreTag()) {
+                $this->emulation->startEnvironmentEmulation($store->getId());
+                $url = $store->getUrl('/') . $url['url_rewrite'];
+                $this->emulation->stopEnvironmentEmulation($store->getId());
+            } else {
+                $url = $store->getUrl($url['url_rewrite']);
+            }
         }
 
         return $url;
@@ -250,22 +263,34 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $url = '';
 
-        $urlRewriteCollection = $this->urlRewriteCollectionFactory->create();
-        $urlRewriteCollection->addStoreFilter($store);
-        $urlRewriteCollection->addFieldToFilter('entity_id', $_category->getId());
-        $urlRewriteCollection->addFieldToFilter('entity_type', 'category');
-        $urlRewriteCollection->addFieldToSelect(['request_path']);
-
-        $urlRewrite = $urlRewriteCollection->getFirstItem();
-
-        if ($urlRewrite && $urlRewrite->getRequestPath()) {
-            if ($this->getRemoveStoreTag()) {
-                $this->emulation->startEnvironmentEmulation($store->getId());
-                $url = $store->getUrl('/') . $urlRewrite['request_path'];
-                $this->emulation->stopEnvironmentEmulation($store->getId());
-            } else {
-                $url = $store->getUrl($urlRewrite['request_path']);
+        //check if category is visible in corresponding store
+        try {
+            $categoryInStore = $this->categoryRepository->get($_category->getId(), $store->getId());
+            $active          = $categoryInStore->getIsActive();
+            if (!$active) {
+                return $url;
             }
+
+            $urlRewriteCollection = $this->urlRewriteCollectionFactory->create();
+            $urlRewriteCollection->addStoreFilter($store);
+            $urlRewriteCollection->addFieldToFilter('entity_id', $_category->getId());
+            $urlRewriteCollection->addFieldToFilter('entity_type', 'category');
+            $urlRewriteCollection->addFieldToSelect(['request_path']);
+
+            $urlRewrite = $urlRewriteCollection->getFirstItem();
+
+            if ($urlRewrite && $urlRewrite->getRequestPath()) {
+                if ($this->getRemoveStoreTag()) {
+                    $this->emulation->startEnvironmentEmulation($store->getId());
+                    $url = $store->getUrl('/') . $urlRewrite['request_path'];
+                    $this->emulation->stopEnvironmentEmulation($store->getId());
+                } else {
+                    $url = $store->getUrl($urlRewrite['request_path']);
+                }
+            }
+
+        } catch (NoSuchEntityException $e) {
+            //silence is golden
         }
 
         return $url;

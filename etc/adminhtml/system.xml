@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
-        <tab id="blackbird" translate="label" sortOrder="10">
-            <label>Blackbird</label>
+        <tab id="blackbird_extensions" translate="label" sortOrder="300">
+            <label>Blackbird Extensions</label>
         </tab>
         <section id="hreflang" translate="label" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
             <class>separator-top</class>
             <label>Href Lang</label>
-            <tab>blackbird</tab>
+            <tab>blackbird_extensions</tab>
             <resource>Blackbird_HrefLang::config</resource>
-            <group id="general" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="general" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="0" showInStore="1">
                 <label>Country Selector Block</label>
                 <field id="enabled_hreflang" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Href Lang Block</label>
@@ -34,6 +34,10 @@
                     <label>Default Locale</label>
                     <source_model>Magento\Config\Model\Config\Source\Locale</source_model>
                     <comment><![CDATA[Format: "en_US". Define which store view will have a tag "x-default" attached. See documentation here: https://support.google.com/webmasters/answer/189077?hl=fr]]></comment>
+                </field>
+                <field id="enabled_store" translate="label comment" type="select" sortOrder="1" showInDefault="0" showInWebsite="0" showInStore="1">
+                    <label>Use this store for Href Lang Block</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
         </section>
