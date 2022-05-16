@@ -9,7 +9,7 @@
         "magento/module-deploy": ">=100.0.0"
     },
     "type": "magento2-module",
-    "version": "100.0.8",
+    "version": "100.0.9",
     "license": [
         "https://store.bird.eu/license/"
     ],
