@@ -5,4 +5,25 @@
         <plugin sortOrder="1" name="blackbirdHrefLangSwitcherUrlProvider"
                 type="Blackbird\HrefLang\Plugin\ViewModel\SwitcherUrlProviderPlugin"/>
     </type>
+
+    <preference for="Blackbird\HrefLang\Api\HrefLangProvidersInterface" type="Blackbird\HrefLang\Model\HrefLangProviders"/>
+
+        <type name="Blackbird\HrefLang\Api\HrefLangProvidersInterface">
+            <arguments>
+                <argument name="providers" xsi:type="array">
+                    <item name="catalog_category" xsi:type="array">
+                        <item name="class" xsi:type="object">Blackbird\HrefLang\Model\Provider\Catalog\Category</item>
+                        <item name="sortOrder" xsi:type="number">10</item>
+                    </item>
+                    <item name="catalog_product" xsi:type="array">
+                        <item name="class" xsi:type="object">Blackbird\HrefLang\Model\Provider\Catalog\Product</item>
+                        <item name="sortOrder" xsi:type="number">20</item>
+                    </item>
+                    <item name="homepage" xsi:type="array">
+                        <item name="class" xsi:type="object">Blackbird\HrefLang\Model\Provider\Homepage</item>
+                        <item name="sortOrder" xsi:type="number">5</item>
+                    </item>
+                </argument>
+            </arguments>
+        </type>
 </config>

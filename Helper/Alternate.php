@@ -2,30 +2,24 @@
 
 namespace Blackbird\HrefLang\Helper;
 
-use Magento\Catalog\Api\CategoryRepositoryInterface;
-use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Model\ResourceModel\Url;
+use Blackbird\HrefLang\Api\HrefLangProvidersInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\Deployed\Options;
-use Magento\Framework\Locale\Resolver;
-use Magento\Framework\View\LayoutInterface;
-use Magento\Store\Model\App\Emulation;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\UrlRewrite\Model\ResourceModel\UrlRewriteCollectionFactory;
 
 class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
 {
+    const CONFIG_XML_PATH_GENERAL_LOCALE_CODE = 'general/locale/code';
+    const CONFIG_XML_PATH_HREFLANG_GENERAL_SAME_WEBSITE_ONLY = 'hreflang/general/same_website_only';
+    const CONFIG_XML_PATH_HREFLANG_GENERAL_ENABLED_STORE = 'hreflang/general/enabled_store';
+    const CONFIG_XML_PATH_WEB_SECURE_BASE_URL = 'web/secure/base_url';
+    const CONFIG_XML_PATH_HREFLANG_GENERAL_DEFAULT_LOCALE = 'hreflang/general/default_locale';
     /**
      * @var null
      */
     protected $_alternateLinks = null;
-
-    /**
-     * @var Resolver
-     */
-    protected $localeResolver;
 
     /**
      * @var StoreManagerInterface
@@ -38,84 +32,20 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
     protected $localeOptions;
 
     /**
-     * @var ScopeConfigInterface
+     * @var HrefLangProvidersInterface
      */
-    protected $scopeConfig;
+    protected $hrefLangProviders;
 
-    /**
-     * @var CategoryRepositoryInterface
-     */
-    protected $categoryRepository;
-
-    /**
-     * @var ProductRepositoryInterface
-     */
-    protected $productRepository;
-
-    /**
-     * @var LayoutInterface
-     */
-    protected $layout;
-
-    /**
-     * @var Url
-     */
-    protected $catalogUrl;
-
-    /**
-     * @var UrlRewriteCollectionFactory
-     */
-    protected $urlRewriteCollectionFactory;
-
-    /**
-     * @var Emulation
-     */
-    protected $emulation;
-
-    /**
-     * @var RequestInterface
-     */
-    protected $request;
-
-    /**
-     * Alternate constructor.
-     *
-     * @param StoreManagerInterface       $storeManager
-     * @param Resolver                    $localeResolver
-     * @param Options                     $localeOptions
-     * @param ScopeConfigInterface        $scopeConfig
-     * @param CategoryRepositoryInterface $categoryRepository
-     * @param ProductRepositoryInterface  $productRepository
-     * @param LayoutInterface             $layout
-     * @param Url                         $catalogUrl
-     * @param UrlRewriteCollectionFactory $urlRewriteCollectionFactory
-     * @param Emulation                   $emulation
-     * @param RequestInterface            $request
-     */
     public function __construct(
+        HrefLangProvidersInterface $hrefLangProviders,
         StoreManagerInterface $storeManager,
-        Resolver $localeResolver,
         Options $localeOptions,
-        ScopeConfigInterface $scopeConfig,
-        CategoryRepositoryInterface $categoryRepository,
-        ProductRepositoryInterface $productRepository,
-        LayoutInterface $layout,
-        Url $catalogUrl,
-        UrlRewriteCollectionFactory $urlRewriteCollectionFactory,
-        Emulation $emulation,
-        RequestInterface $request
+        ScopeConfigInterface $scopeConfig
     ) {
-        $this->storeManager                = $storeManager;
-        $this->localeResolver              = $localeResolver;
-        $this->localeOptions               = $localeOptions;
-        $this->scopeConfig                 = $scopeConfig;
-        $this->categoryRepository          = $categoryRepository;
-        $this->productRepository           = $productRepository;
-        $this->layout                      = $layout;
-        $this->catalogUrl                  = $catalogUrl;
-        $this->urlRewriteCollectionFactory = $urlRewriteCollectionFactory;
-        $this->emulation                   = $emulation;
-        $this->request                     = $request;
+        $this->hrefLangProviders = $hrefLangProviders;
+        $this->storeManager      = $storeManager;
+        $this->localeOptions     = $localeOptions;
+        $this->scopeConfig       = $scopeConfig;
     }
 
     /**
@@ -124,49 +54,87 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
     public function getAlternateLinks()
     {
         if (!$this->_alternateLinks) {
-            $allLanguages    = $this->localeOptions->getTranslatedOptionLocales();
-            $currentLangCode = $this->scopeConfig->getValue('general/locale/code', 'store');
-            $otherCodes      = [];
-            $storeCodeToUrl  = [];
-            $currentStore    = $this->storeManager->getStore();
+
+            $otherCodes     = [];
+            $storeCodeToUrl = [];
+            $currentStore   = $this->storeManager->getStore();
 
             foreach ($this->storeManager->getStores() as $store) {
-                if ((!$this->scopeConfig->getValue(
-                        'same_website_only',
-                        'store'
-                    ) || $store->getWebsiteId() === $currentStore->getWebsiteId()) && $store->getRootCategoryId() === $currentStore->getRootCategoryId()) {
-                    $localeForStore = $this->scopeConfig->getValue('general/locale/code', 'store', $store->getId());
 
-                    if ($this->scopeConfig->getValue('hreflang/general/enabled_store', 'store', $store->getId())) {
-                        $otherCodes[] = $localeForStore;
+                //Check store root category is the same (necessary for catalog switch)
+                if ($store->getRootCategoryId() !== $currentStore->getRootCategoryId()) {
+                    continue;
+                }
 
-                        // we are on product page
-                        if ($_product = $this->getCurrentProduct()) {
-                            $storeCodeToUrl[$localeForStore] = $this->getProductUrl($_product, $store);
-                        } //we are on category page
-                        elseif ($_category = $this->getCurrentCategory()) {
-                            $storeCodeToUrl[$localeForStore] = $this->getCategoryUrl($_category, $store);
-                        } //we are on home page
-                        elseif ($this->request->getFullActionName() == 'cms_index_index') {
-                            $storeCodeToUrl[$localeForStore] = $this->scopeConfig->getValue(
-                                'web/secure/base_url', 'store', $store->getId());
-                        }
+                //Check samewebsite store only
+                if (
+                    $this->scopeConfig->getValue(
+                        self::CONFIG_XML_PATH_HREFLANG_GENERAL_SAME_WEBSITE_ONLY,
+                        ScopeInterface::SCOPE_STORE)
+                    && $store->getWebsiteId() !== $currentStore->getWebsiteId()
+                ) {
+                    continue;
+                }
+
+                //Check Href lang is enable for $store
+                if (!$this->scopeConfig->getValue(
+                    self::CONFIG_XML_PATH_HREFLANG_GENERAL_ENABLED_STORE,
+                    ScopeInterface::SCOPE_STORE,
+                    $store->getId())) {
+                    continue;
+                }
+
+                //Get $store language code iso (fr_Fr, en_US, ...)
+                $localeForStore = $this->scopeConfig->getValue(
+                    self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
+                    ScopeInterface::SCOPE_STORE,
+                    $store->getId());
+
+                $otherCodes[] = $localeForStore;
+
+                foreach ($this->hrefLangProviders->getSortedProviders() as $provider) {
+                    $alternatedUrl = $provider->getAlternativeUrlForStore($store);
+                    if (!is_null($alternatedUrl)) {
+                        $storeCodeToUrl[$localeForStore] = $alternatedUrl;
+                        break;
                     }
                 }
+                /*
+                                elseif ($this->request->getFullActionName() == 'cms_index_index') {
+                                    $storeCodeToUrl[$localeForStore] = $this->scopeConfig->getValue(
+                                        self::CONFIG_XML_PATH_WEB_SECURE_BASE_URL,
+                                        'store',
+                                        $store->getId());
+                                }*/
             }
+
+            $allLanguages    = $this->localeOptions->getTranslatedOptionLocales();
+            $currentLangCode = $this->scopeConfig->getValue(
+                self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
+                ScopeInterface::SCOPE_STORE);
 
             $otherLangs = [];
             foreach ($allLanguages as $lang) {
                 if ($lang['value'] == $currentLangCode) {
-                    $currentLang = explode(' (', $lang['label']);
+                    $currentLang = explode(
+                        ' (',
+                        $lang['label']);
                     $currentLang = $currentLang[0];
                 }
 
-                if (in_array($lang['value'], $otherCodes)) {
-                    if (strpos($lang['value'], 'US') !== false) {
-                        $language = explode(' /', $lang['label']);
+                if (in_array(
+                    $lang['value'],
+                    $otherCodes)) {
+                    if (strpos(
+                            $lang['value'],
+                            'US') !== false) {
+                        $language = explode(
+                            ' /',
+                            $lang['label']);
                     } else {
-                        $language = explode(' (', $lang['label']);
+                        $language = explode(
+                            ' (',
+                            $lang['label']);
                     }
                     $language = $language[0];
 
@@ -180,7 +148,9 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                     'currentLang'     => $currentLang,
                     'storeCodeToUrl'  => $storeCodeToUrl,
                     'currentStoreUrl' => $storeCodeToUrl[$this->scopeConfig->getValue(
-                        'general/locale/code', 'store', $currentStore->getId())]
+                        self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
+                        'store',
+                        $currentStore->getId())]
                 ];
             }
         }
@@ -188,113 +158,6 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->_alternateLinks;
     }
 
-    /**
-     * @return \Magento\Catalog\Api\Data\CategoryInterface|null
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
-     */
-    protected function getCurrentCategory()
-    {
-        $category   = null;
-        $categoryId = $this->request->getParam('id');
-
-        //check if we are on product page
-        if ($categoryId && in_array('catalog_category_view', $this->layout->getUpdate()->getHandles())) {
-            try {
-                $category = $this->categoryRepository->get($categoryId);
-            } catch (NoSuchEntityException $e) {
-                //silence is golden
-            }
-        }
-
-        return $category;
-    }
-
-    /**
-     * @return \Magento\Catalog\Api\Data\ProductInterface|null
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
-     */
-    protected function getCurrentProduct()
-    {
-        $product   = null;
-        $productId = $this->request->getParam('id');
-
-        //check if we are on product page
-        if ($productId && in_array('catalog_product_view', $this->layout->getUpdate()->getHandles())) {
-            try {
-                $product = $this->productRepository->getById($productId);
-            } catch (NoSuchEntityException $e) {
-                //silence is golden
-            }
-        }
-
-        return $product;
-    }
-
-    /**
-     * @param \Magento\Catalog\Api\Data\ProductInterface $_product
-     * @param                                            $store
-     *
-     * @return string
-     */
-    protected function getProductUrl(\Magento\Catalog\Api\Data\ProductInterface $_product, $store)
-    {
-        $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
-        $url         = !empty($productsUrl[$_product->getId()]) ? $productsUrl[$_product->getId()] : '';
-        if (!empty($url)) {
-            if ($this->getRemoveStoreTag()) {
-                $this->emulation->startEnvironmentEmulation($store->getId());
-                $url = $store->getUrl('/') . $url['url_rewrite'];
-                $this->emulation->stopEnvironmentEmulation($store->getId());
-            } else {
-                $url = $store->getUrl($url['url_rewrite']);
-            }
-        }
-
-        return $url;
-    }
-
-    /**
-     * @param \Magento\Catalog\Api\Data\CategoryInterface $_category
-     * @param                                             $store
-     *
-     * @return string
-     */
-    protected function getCategoryUrl(\Magento\Catalog\Api\Data\CategoryInterface $_category, $store)
-    {
-        $url = '';
-
-        //check if category is visible in corresponding store
-        try {
-            $categoryInStore = $this->categoryRepository->get($_category->getId(), $store->getId());
-            $active          = $categoryInStore->getIsActive();
-            if (!$active) {
-                return $url;
-            }
-
-            $urlRewriteCollection = $this->urlRewriteCollectionFactory->create();
-            $urlRewriteCollection->addStoreFilter($store);
-            $urlRewriteCollection->addFieldToFilter('entity_id', $_category->getId());
-            $urlRewriteCollection->addFieldToFilter('entity_type', 'category');
-            $urlRewriteCollection->addFieldToSelect(['request_path']);
-
-            $urlRewrite = $urlRewriteCollection->getFirstItem();
-
-            if ($urlRewrite && $urlRewrite->getRequestPath()) {
-                if ($this->getRemoveStoreTag()) {
-                    $this->emulation->startEnvironmentEmulation($store->getId());
-                    $url = $store->getUrl('/') . $urlRewrite['request_path'];
-                    $this->emulation->stopEnvironmentEmulation($store->getId());
-                } else {
-                    $url = $store->getUrl($urlRewrite['request_path']);
-                }
-            }
-
-        } catch (NoSuchEntityException $e) {
-            //silence is golden
-        }
-
-        return $url;
-    }
 
     /**
      * Return x-default locale code
@@ -302,15 +165,8 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getXDefault(): string
     {
-        return $this->scopeConfig->getValue('hreflang/general/default_locale', 'store');
-    }
-
-    /**
-     * Return x-default locale code
-     * @return mixed
-     */
-    protected function getRemoveStoreTag(): string
-    {
-        return $this->scopeConfig->getValue('hreflang/general/remove_store_param', 'store');
+        return $this->scopeConfig->getValue(
+            self::CONFIG_XML_PATH_HREFLANG_GENERAL_DEFAULT_LOCALE,
+            ScopeInterface::SCOPE_STORE);
     }
 }

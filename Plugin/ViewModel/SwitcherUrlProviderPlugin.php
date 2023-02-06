@@ -4,6 +4,7 @@ namespace Blackbird\HrefLang\Plugin\ViewModel;
 
 use Blackbird\HrefLang\Helper\Alternate;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
 
 class SwitcherUrlProviderPlugin
 {
@@ -38,7 +39,7 @@ class SwitcherUrlProviderPlugin
      */
     public function aroundGetTargetStoreRedirectUrl(\Magento\Store\ViewModel\SwitcherUrlProvider $subject, callable $proceed, \Magento\Store\Model\Store $store)
     {
-        $replace = $this->scopeConfig->getValue('hreflang/general/replace_langswitcher');
+        $replace = $this->scopeConfig->getValue('hreflang/general/replace_langswitcher', ScopeInterface::SCOPE_STORE);
 
         if ($replace) {
             $links = $this->alternateHelper->getAlternateLinks();

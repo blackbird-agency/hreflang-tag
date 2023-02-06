@@ -11,26 +11,26 @@
             <resource>Blackbird_HrefLang::config</resource>
             <group id="general" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="0" showInStore="1">
                 <label>Country Selector Block</label>
-                <field id="enabled_hreflang" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enabled_hreflang" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Href Lang Block</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[Add all alternate links in the DOM]]></comment>
                 </field>
-                <field id="same_website_only" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="same_website_only" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Show Only Store From Same Website</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="replace_langswitcher" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="replace_langswitcher" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Replace Native Store Switcher Url</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[Only applied for products and categories]]></comment>
                 </field>
-                <field id="remove_store_param" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="remove_store_param" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Remove "___store" Parameter from Url</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[You can remove ___store parameter from store switcher and href lang if not necessary for your configuration.]]></comment>
                 </field>
-                <field id="default_locale" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="default_locale" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Default Locale</label>
                     <source_model>Magento\Config\Model\Config\Source\Locale</source_model>
                     <comment><![CDATA[Format: "en_US". Define which store view will have a tag "x-default" attached. See documentation here: https://support.google.com/webmasters/answer/189077?hl=fr]]></comment>
