@@ -9,7 +9,7 @@
             <label>Href Lang</label>
             <tab>blackbird_extensions</tab>
             <resource>Blackbird_HrefLang::config</resource>
-            <group id="general" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="0" showInStore="1">
+            <group id="general" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Country Selector Block</label>
                 <field id="enabled_hreflang" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Href Lang Block</label>
@@ -30,14 +30,17 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[You can remove ___store parameter from store switcher and href lang if not necessary for your configuration.]]></comment>
                 </field>
-                <field id="default_locale" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="default_locale" translate="label comment" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Default Locale</label>
-                    <source_model>Magento\Config\Model\Config\Source\Locale</source_model>
-                    <comment><![CDATA[Format: "en_US". Define which store view will have a tag "x-default" attached. See documentation here: https://support.google.com/webmasters/answer/189077?hl=fr]]></comment>
+                    <comment><![CDATA[Format: "en-us" or "en" Based on what you defined in Store view scope for field "Locale code for HrefLang". Define which store view will have a tag "x-default" attached. See documentation here: https://support.google.com/webmasters/answer/189077?hl=fr]]></comment>
                 </field>
                 <field id="enabled_store" translate="label comment" type="select" sortOrder="1" showInDefault="0" showInWebsite="0" showInStore="1">
                     <label>Use this store for Href Lang Block</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="locale_for_hreflang_tag" translate="label comment" type="text" sortOrder="1" showInDefault="0" showInWebsite="0" showInStore="1">
+                    <label>Locale code for HrefLang Tag</label>
+                    <comment><![CDATA[(e.g. "fr", "en-us", "es-us"). By Default will use global  locale configuration]]></comment>
                 </field>
             </group>
         </section>

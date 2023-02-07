@@ -43,24 +43,26 @@ class SwitcherUrlProviderPlugin
 
         if ($replace) {
             $links = $this->alternateHelper->getAlternateLinks();
+
+            //Get $store language code iso (fr_Fr, en_US, ...)
+            $localeForStore = $this->scopeConfig->getValue(
+                Alternate::CONFIG_XML_PATH_HREFLANG_GENERAL_LOCALE_FOR_HREFLANG_TAG,
+                ScopeInterface::SCOPE_STORE,
+                $store->getId());
+
+            if(!$localeForStore)
+            {
+                $localeForStore = $this->scopeConfig->getValue(
+                    Alternate::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
+                    ScopeInterface::SCOPE_STORE,
+                    $store->getId());
+            }
+
             if (isset($links['storeCodeToUrl'])
                 && count($links['storeCodeToUrl']) > 0
-                && isset(
-                    $links['storeCodeToUrl'][$this->scopeConfig->getValue(
-                        'general/locale/code',
-                        'store',
-                        $store->getId()
-                    )])
-                && $links['storeCodeToUrl'][$this->scopeConfig->getValue(
-                    'general/locale/code',
-                    'store',
-                    $store->getId()
-                )]) {
-                return $links['storeCodeToUrl'][$this->scopeConfig->getValue(
-                    'general/locale/code',
-                    'store',
-                    $store->getId()
-                )];
+                && isset($links['storeCodeToUrl'][$localeForStore])
+                && $links['storeCodeToUrl'][$localeForStore]) {
+                return $links['storeCodeToUrl'][$localeForStore];
             }
         }
 

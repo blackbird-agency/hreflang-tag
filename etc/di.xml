@@ -14,14 +14,17 @@
                     <item name="catalog_category" xsi:type="array">
                         <item name="class" xsi:type="object">Blackbird\HrefLang\Model\Provider\Catalog\Category</item>
                         <item name="sortOrder" xsi:type="number">10</item>
+                        <item name="enabled" xsi:type="boolean">true</item>
                     </item>
                     <item name="catalog_product" xsi:type="array">
                         <item name="class" xsi:type="object">Blackbird\HrefLang\Model\Provider\Catalog\Product</item>
                         <item name="sortOrder" xsi:type="number">20</item>
+                        <item name="enabled" xsi:type="boolean">true</item>
                     </item>
                     <item name="homepage" xsi:type="array">
                         <item name="class" xsi:type="object">Blackbird\HrefLang\Model\Provider\Homepage</item>
                         <item name="sortOrder" xsi:type="number">5</item>
+                        <item name="enabled" xsi:type="boolean">true</item>
                     </item>
                 </argument>
             </arguments>

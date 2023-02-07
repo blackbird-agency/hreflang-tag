@@ -5,6 +5,7 @@ namespace Blackbird\HrefLang\Model\Provider\Catalog;
 use Blackbird\HrefLang\Api\ProviderInterface;
 use Blackbird\HrefLang\Model\Provider\AbstractProvider;
 use Magento\Catalog\Api\CategoryRepositoryInterface;
+use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -66,7 +67,7 @@ class Category extends AbstractProvider implements ProviderInterface
      *
      * @return string
      */
-    protected function getCategoryUrl(\Magento\Catalog\Api\Data\CategoryInterface $_category, $store)
+    protected function getCategoryUrl(\Magento\Catalog\Api\Data\CategoryInterface $_category, $store): string
     {
         $url = '';
 
@@ -96,7 +97,7 @@ class Category extends AbstractProvider implements ProviderInterface
                 if ($this->getRemoveStoreTag()) {
                     $this->emulation->startEnvironmentEmulation($store->getId());
                     $url = $store->getUrl('/') . $urlRewrite['request_path'];
-                    $this->emulation->stopEnvironmentEmulation($store->getId());
+                    $this->emulation->stopEnvironmentEmulation();
                 } else {
                     $url = $store->getUrl($urlRewrite['request_path']);
                 }
@@ -113,7 +114,7 @@ class Category extends AbstractProvider implements ProviderInterface
      * @return \Magento\Catalog\Api\Data\CategoryInterface|null
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function getCurrentCategory()
+    protected function getCurrentCategory(): ?CategoryInterface
     {
         $category   = null;
         $categoryId = $this->request->getParam('id');

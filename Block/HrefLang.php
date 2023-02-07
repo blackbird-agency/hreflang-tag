@@ -43,17 +43,13 @@ class HrefLang extends \Magento\Framework\View\Element\Template
         $alternate = $this->alternateHelper->getAlternateLinks();
         if ($alternate && isset($alternate['storeCodeToUrl'])) {
             foreach ($alternate['storeCodeToUrl'] as $keyLocate => $url) {
-                if (strpos($keyLocate, 'en') !== false) {
-                    $altKey = strtolower($keyLocate);
-                } else {
-                    $altKey = strtolower(substr($keyLocate, 0, 2));
-                }
 
+                $keyLocate = strtolower(str_replace('_', '-', $keyLocate));
                 if ($keyLocate === $this->alternateHelper->getXDefault()) {
                     $res[self::DEFAULT_HREF_LANG] = $url;
                 }
 
-                $res[str_replace('_', '-', $altKey)] = $url;
+                $res[$keyLocate] = $url;
             }
         }
 

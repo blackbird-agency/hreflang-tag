@@ -24,6 +24,12 @@ class HrefLangProviders implements HrefLangProvidersInterface
                 && is_object($provider['class'])
                 && $provider['class'] instanceof ProviderInterface
             ) {
+                //check if provider is enabled
+                if(isset($provider['enabled']) && $provider['enabled'] === false)
+                {
+                    continue;
+                }
+
                 $providerClass                                                          = $provider['class'];
 
                 $sortOrder = (int) $provider['sortOrder'];

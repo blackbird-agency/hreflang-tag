@@ -12,9 +12,9 @@ use Magento\Store\Model\StoreManagerInterface;
 class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
 {
     const CONFIG_XML_PATH_GENERAL_LOCALE_CODE = 'general/locale/code';
+    const CONFIG_XML_PATH_HREFLANG_GENERAL_LOCALE_FOR_HREFLANG_TAG = 'hreflang/general/locale_for_hreflang_tag';
     const CONFIG_XML_PATH_HREFLANG_GENERAL_SAME_WEBSITE_ONLY = 'hreflang/general/same_website_only';
     const CONFIG_XML_PATH_HREFLANG_GENERAL_ENABLED_STORE = 'hreflang/general/enabled_store';
-    const CONFIG_XML_PATH_WEB_SECURE_BASE_URL = 'web/secure/base_url';
     const CONFIG_XML_PATH_HREFLANG_GENERAL_DEFAULT_LOCALE = 'hreflang/general/default_locale';
     /**
      * @var null
@@ -55,9 +55,9 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
     {
         if (!$this->_alternateLinks) {
 
-            $otherCodes     = [];
             $storeCodeToUrl = [];
             $currentStore   = $this->storeManager->getStore();
+            $currentLocaleStoreCode = '';
 
             foreach ($this->storeManager->getStores() as $store) {
 
@@ -86,12 +86,25 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
 
                 //Get $store language code iso (fr_Fr, en_US, ...)
                 $localeForStore = $this->scopeConfig->getValue(
-                    self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
+                    self::CONFIG_XML_PATH_HREFLANG_GENERAL_LOCALE_FOR_HREFLANG_TAG,
                     ScopeInterface::SCOPE_STORE,
                     $store->getId());
 
-                $otherCodes[] = $localeForStore;
+                if(!$localeForStore)
+                {
+                    $localeForStore = $this->scopeConfig->getValue(
+                        self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
+                        ScopeInterface::SCOPE_STORE,
+                        $store->getId());
+                }
 
+                if($currentStore->getId() === $store->getId())
+                {
+                    $currentLocaleStoreCode = $localeForStore;
+                }
+                /**
+                 *  Href Lang provider comes from  DI.xml, you can add  more if needed
+                 */
                 foreach ($this->hrefLangProviders->getSortedProviders() as $provider) {
                     $alternatedUrl = $provider->getAlternativeUrlForStore($store);
                     if (!is_null($alternatedUrl)) {
@@ -99,58 +112,12 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                         break;
                     }
                 }
-                /*
-                                elseif ($this->request->getFullActionName() == 'cms_index_index') {
-                                    $storeCodeToUrl[$localeForStore] = $this->scopeConfig->getValue(
-                                        self::CONFIG_XML_PATH_WEB_SECURE_BASE_URL,
-                                        'store',
-                                        $store->getId());
-                                }*/
-            }
-
-            $allLanguages    = $this->localeOptions->getTranslatedOptionLocales();
-            $currentLangCode = $this->scopeConfig->getValue(
-                self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
-                ScopeInterface::SCOPE_STORE);
-
-            $otherLangs = [];
-            foreach ($allLanguages as $lang) {
-                if ($lang['value'] == $currentLangCode) {
-                    $currentLang = explode(
-                        ' (',
-                        $lang['label']);
-                    $currentLang = $currentLang[0];
-                }
-
-                if (in_array(
-                    $lang['value'],
-                    $otherCodes)) {
-                    if (strpos(
-                            $lang['value'],
-                            'US') !== false) {
-                        $language = explode(
-                            ' /',
-                            $lang['label']);
-                    } else {
-                        $language = explode(
-                            ' (',
-                            $lang['label']);
-                    }
-                    $language = $language[0];
-
-                    $otherLangs[] = ['label' => $language, 'code' => $lang['value']];
-                }
             }
 
             if (count($storeCodeToUrl) > 0) {
                 $this->_alternateLinks = [
-                    'otherLangs'      => $otherLangs,
-                    'currentLang'     => $currentLang,
                     'storeCodeToUrl'  => $storeCodeToUrl,
-                    'currentStoreUrl' => $storeCodeToUrl[$this->scopeConfig->getValue(
-                        self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
-                        'store',
-                        $currentStore->getId())]
+                    'currentStoreUrl' => $storeCodeToUrl[$currentLocaleStoreCode]
                 ];
             }
         }

@@ -1,5 +1,5 @@
 {
-    "name": "blackbird/hreflang",
+    "name": "blackbird/hreflang-tag",
     "description": "",
     "authors": [
         "Blackbird Agency",
@@ -9,9 +9,9 @@
         "magento/module-deploy": ">=100.0.0"
     },
     "type": "magento2-module",
-    "version": "100.0.9",
+    "version": "1.0.0",
     "license": [
-        "https://store.bird.eu/license/"
+        "OSL-3.0"
     ],
     "autoload": {
         "files": [

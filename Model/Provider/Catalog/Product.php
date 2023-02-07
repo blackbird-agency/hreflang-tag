@@ -4,6 +4,7 @@ namespace Blackbird\HrefLang\Model\Provider\Catalog;
 
 use Blackbird\HrefLang\Api\ProviderInterface;
 use Blackbird\HrefLang\Model\Provider\AbstractProvider;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Url;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -61,7 +62,7 @@ class Product extends AbstractProvider implements  ProviderInterface
      * @return \Magento\Catalog\Api\Data\ProductInterface|null
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function getCurrentProduct()
+    protected function getCurrentProduct(): ?ProductInterface
     {
         $product   = null;
         $productId = $this->request->getParam('id');
@@ -86,7 +87,7 @@ class Product extends AbstractProvider implements  ProviderInterface
      *
      * @return string
      */
-    protected function getProductUrl(\Magento\Catalog\Api\Data\ProductInterface $_product, $store)
+    protected function getProductUrl(\Magento\Catalog\Api\Data\ProductInterface $_product, $store): ?string
     {
         $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
         $url         = !empty($productsUrl[$_product->getId()]) ? $productsUrl[$_product->getId()] : '';
@@ -94,7 +95,7 @@ class Product extends AbstractProvider implements  ProviderInterface
             if ($this->getRemoveStoreTag()) {
                 $this->emulation->startEnvironmentEmulation($store->getId());
                 $url = $store->getUrl('/') . $url['url_rewrite'];
-                $this->emulation->stopEnvironmentEmulation($store->getId());
+                $this->emulation->stopEnvironmentEmulation();
             } else {
                 $url = $store->getUrl($url['url_rewrite']);
             }
