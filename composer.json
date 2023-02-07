@@ -2,8 +2,16 @@
     "name": "blackbird/hreflang-tag",
     "description": "",
     "authors": [
-        "Blackbird Agency",
-        "Anthony Grutter"
+        {
+            "name": "Blackbird Agency",
+            "email": "hello@bird.eu",
+            "homepage": "https://black.bird.eu"
+        },
+        {
+            "name": "Anthony Grutter",
+            "email": "anthony@bird.eu",
+            "homepage": "https://black.bird.eu"
+        }
     ],
     "require": {
         "magento/module-deploy": ">=100.0.0"
