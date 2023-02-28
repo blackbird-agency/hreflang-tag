@@ -83,7 +83,7 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                     && $store->getWebsiteId() !== $currentStore->getWebsiteId()
                 ) {
                     continue;
-                }var_dump($store->getCode());
+                }
 
                 //Check Href lang is enable for $store
                 if (!$this->scopeConfig->getValue(
