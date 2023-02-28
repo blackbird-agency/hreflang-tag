@@ -5,6 +5,8 @@ namespace Blackbird\HrefLang\Helper;
 use Blackbird\HrefLang\Api\HrefLangProvidersInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\DataObject;
+use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Locale\Deployed\Options;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -36,16 +38,23 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $hrefLangProviders;
 
+    /**
+     * @var ManagerInterface
+     */
+    protected $eventManager;
+
     public function __construct(
         HrefLangProvidersInterface $hrefLangProviders,
         StoreManagerInterface $storeManager,
         Options $localeOptions,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        ManagerInterface $eventManager
     ) {
         $this->hrefLangProviders = $hrefLangProviders;
         $this->storeManager      = $storeManager;
         $this->localeOptions     = $localeOptions;
         $this->scopeConfig       = $scopeConfig;
+        $this->eventManager      = $eventManager;
     }
 
     /**
@@ -55,8 +64,8 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
     {
         if (!$this->_alternateLinks) {
 
-            $storeCodeToUrl = [];
-            $currentStore   = $this->storeManager->getStore();
+            $storeCodeToUrl         = [];
+            $currentStore           = $this->storeManager->getStore();
             $currentLocaleStoreCode = '';
 
             foreach ($this->storeManager->getStores() as $store) {
@@ -74,7 +83,7 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                     && $store->getWebsiteId() !== $currentStore->getWebsiteId()
                 ) {
                     continue;
-                }
+                }var_dump($store->getCode());
 
                 //Check Href lang is enable for $store
                 if (!$this->scopeConfig->getValue(
@@ -84,22 +93,33 @@ class Alternate extends \Magento\Framework\App\Helper\AbstractHelper
                     continue;
                 }
 
+                //Add ability to handle eligibility for current store using event dispatcher
+                $eligibilityObject = new DataObject(['is_eligible' => true]);
+                $this->eventManager->dispatch('hreflang_check_store_eligible', [
+                    'current_store' => $currentStore,
+                    'store' => $store,
+                    'eligibility_object' => $eligibilityObject
+                ]);
+                if(!$eligibilityObject->getIsEligible())
+                {
+                    continue;
+                }
+
+
                 //Get $store language code iso (fr_Fr, en_US, ...)
                 $localeForStore = $this->scopeConfig->getValue(
                     self::CONFIG_XML_PATH_HREFLANG_GENERAL_LOCALE_FOR_HREFLANG_TAG,
                     ScopeInterface::SCOPE_STORE,
                     $store->getId());
 
-                if(!$localeForStore)
-                {
+                if (!$localeForStore) {
                     $localeForStore = $this->scopeConfig->getValue(
                         self::CONFIG_XML_PATH_GENERAL_LOCALE_CODE,
                         ScopeInterface::SCOPE_STORE,
                         $store->getId());
                 }
 
-                if($currentStore->getId() === $store->getId())
-                {
+                if ($currentStore->getId() === $store->getId()) {
                     $currentLocaleStoreCode = $localeForStore;
                 }
                 /**
