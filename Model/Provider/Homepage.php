@@ -18,7 +18,7 @@ class Homepage extends AbstractProvider implements ProviderInterface
         }
 
         //Check is homepage URL
-        if ($this->request->getPathInfo() !== '/') {
+        if ($this->request->getPathInfo() !== '/' && $this->request->getPathInfo() !== '') {
             return null;
         }
 
