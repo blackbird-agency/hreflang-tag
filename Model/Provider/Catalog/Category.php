@@ -89,6 +89,10 @@ class Category extends AbstractProvider implements ProviderInterface
             $urlRewriteCollection->addFieldToFilter(
                 'entity_type',
                 'category');
+            $urlRewriteCollection->addFieldToFilter(
+                'redirect_type',
+                ['neq' => 301]);
+
             $urlRewriteCollection->addFieldToSelect(['request_path']);
 
             $urlRewrite = $urlRewriteCollection->getFirstItem();

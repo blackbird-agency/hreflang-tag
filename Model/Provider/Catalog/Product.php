@@ -13,6 +13,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\LayoutInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\App\Emulation;
+use Magento\UrlRewrite\Model\ResourceModel\UrlRewriteCollectionFactory;
 
 class Product extends AbstractProvider implements  ProviderInterface
 {
@@ -28,22 +29,22 @@ class Product extends AbstractProvider implements  ProviderInterface
     protected $productRepository;
 
     /**
-     * @var Url
+     * @var UrlRewriteCollectionFactory
      */
-    protected $catalogUrl;
+    protected $urlRewriteCollectionFactory;
 
     public function __construct(
         Emulation $emulation,
         ProductRepositoryInterface $productRepository,
-        Url $catalogUrl,
         ScopeConfigInterface $scopeConfig,
         LayoutInterface $layout,
-        RequestInterface $request
+        RequestInterface $request,
+        UrlRewriteCollectionFactory $urlRewriteCollectionFactory
     )
     {
         $this->emulation                   = $emulation;
         $this->productRepository           = $productRepository;
-        $this->catalogUrl                  = $catalogUrl;
+        $this->urlRewriteCollectionFactory = $urlRewriteCollectionFactory;
 
         parent::__construct($scopeConfig, $layout, $request);
     }
@@ -89,16 +90,38 @@ class Product extends AbstractProvider implements  ProviderInterface
      */
     protected function getProductUrl(\Magento\Catalog\Api\Data\ProductInterface $_product, $store): ?string
     {
-        $productsUrl = $this->catalogUrl->getRewriteByProductStore([$_product->getId() => $store->getId()]);
-        $url         = !empty($productsUrl[$_product->getId()]) ? $productsUrl[$_product->getId()] : '';
-        if (!empty($url)) {
-            if ($this->getRemoveStoreTag()) {
-                $this->emulation->startEnvironmentEmulation($store->getId());
-                $url = $store->getUrl('/') . $url['url_rewrite'];
-                $this->emulation->stopEnvironmentEmulation();
-            } else {
-                $url = $store->getUrl($url['url_rewrite']);
+        $url = '';
+
+        //check if product is visible in corresponding store
+        try {
+            $urlRewriteCollection = $this->urlRewriteCollectionFactory->create();
+            $urlRewriteCollection->addStoreFilter($store);
+            $urlRewriteCollection->addFieldToFilter(
+                'entity_id',
+                $_product->getId());
+            $urlRewriteCollection->addFieldToFilter(
+                'entity_type',
+                'product');
+            $urlRewriteCollection->addFieldToFilter(
+                'redirect_type',
+                ['neq' => 301]);
+
+            $urlRewriteCollection->addFieldToSelect(['request_path']);
+
+            $urlRewrite = $urlRewriteCollection->getFirstItem();
+
+            if ($urlRewrite && $urlRewrite->getRequestPath()) {
+                if ($this->getRemoveStoreTag()) {
+                    $this->emulation->startEnvironmentEmulation($store->getId());
+                    $url = $store->getUrl('/') . $urlRewrite['request_path'];
+                    $this->emulation->stopEnvironmentEmulation();
+                } else {
+                    $url = $store->getUrl($urlRewrite['request_path']);
+                }
             }
+
+        } catch (NoSuchEntityException $e) {
+            //silence is golden
         }
 
         return $url;
